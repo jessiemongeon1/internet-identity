@@ -132,6 +132,14 @@ const defaults = {
         test: /\.(png|jpg|gif)$/i,
         type: "asset/resource",
       },
+      {
+        test: /\.woff2$/,
+        type: "asset/resource",
+        // don't hash font filename
+        generator: {
+          filename: "./[name][ext]",
+        },
+      },
     ],
   },
   plugins: [

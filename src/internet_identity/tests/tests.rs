@@ -2633,6 +2633,7 @@ mod http_tests {
             ("/index.js", Some("gzip")),
             ("/loader.webp", None),
             ("/favicon.ico", None),
+            ("/inter-v12-latin.woff2", None),
         ];
         let env = env();
         let canister_id = install_ii_canister(&env, II_WASM.clone());

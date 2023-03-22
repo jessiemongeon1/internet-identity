@@ -271,6 +271,7 @@ jobs:
           touch dist/index.css
           touch dist/loader.webp
           touch dist/favicon.ico
+          touch dist/inter-v12-latin.woff2
 
       # Caching ~/.cargo
 

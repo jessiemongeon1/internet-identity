@@ -424,6 +424,7 @@ base-uri 'none';\
 form-action 'none';\
 style-src 'self' 'unsafe-inline';\
 style-src-elem 'self' 'unsafe-inline';\
+font-src 'self';\
 upgrade-insecure-requests;\
 frame-ancestors 'none';$"
     )

@@ -23,6 +23,7 @@ impl ContentType {
             ContentType::ICO => "image/vnd.microsoft.icon".to_string(),
             ContentType::WEBP => "image/webp".to_string(),
             ContentType::OCTETSTREAM => "application/octet-stream".to_string(),
+            ContentType::WOFF2 => "font/woff2".to_string(),
         }
     }
 }
@@ -353,7 +354,8 @@ pub fn content_security_policy_meta() -> String {
          base-uri 'none';\
          form-action 'none';\
          style-src 'self' 'unsafe-inline';\
-         style-src-elem 'self' 'unsafe-inline';"
+         style-src-elem 'self' 'unsafe-inline';\
+         font-src 'self';"
     );
     #[cfg(not(feature = "insecure_requests"))]
     let csp = format!("{csp}upgrade-insecure-requests;");
