@@ -9,6 +9,7 @@ use ic_cdk::api;
 use include_dir::{include_dir, Dir};
 use lazy_static::lazy_static;
 use sha2::Digest;
+use std::ops::Add;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum ContentEncoding {
@@ -25,6 +26,8 @@ pub enum ContentType {
     WEBP,
     CSS,
     OCTETSTREAM,
+    SVG,
+    PNG,
 }
 
 // The <script> tag that loads the 'index.js'
@@ -69,13 +72,13 @@ lazy_static! {
     static ref FOO: String = include_str!("../../../dist/dapps.json").to_string();
 
 }
-static PROJECT_DIR: Dir = include_dir!("$CARGO_MANIFEST_DIR/../../dist/icons");
+static ICONS: Dir = include_dir!("$CARGO_MANIFEST_DIR/../../dist/icons");
 
 // used both in init and post_upgrade
 pub fn init_assets() {
     state::assets_and_hashes_mut(|assets, asset_hashes| {
         for (path, content, content_encoding, content_type) in get_assets() {
-            asset_hashes.insert(path, sha2::Sha256::digest(content).into());
+            asset_hashes.insert(path.clone(), sha2::Sha256::digest(content).into());
             let mut headers = match content_encoding {
                 ContentEncoding::Identity => vec![],
                 ContentEncoding::GZip => {
@@ -93,48 +96,48 @@ pub fn init_assets() {
 
 // Get all the assets. Duplicated assets like index.html are shared and generally all assets are
 // prepared only once (like injecting the canister ID).
-fn get_assets() -> Vec<(&'static str, &'static [u8], ContentEncoding, ContentType)> {
+fn get_assets() -> Vec<(String, &'static [u8], ContentEncoding, ContentType)> {
     let index_html: &[u8] = INDEX_HTML_STR.as_bytes();
     let about_html: &[u8] = ABOUT_HTML_STR.as_bytes();
-    vec![
+    let mut assets = vec![
         (
-            "/",
+            "/".to_string(),
             index_html,
             ContentEncoding::Identity,
             ContentType::HTML,
         ),
         (
-            "/about",
+            "/about".to_string(),
             about_html,
             ContentEncoding::Identity,
             ContentType::HTML,
         ),
         (
-            "/index.html",
+            "/index.html".to_string(),
             index_html,
             ContentEncoding::Identity,
             ContentType::HTML,
         ),
         (
-            "/index.js",
+            "/index.js".to_string(),
             include_bytes!("../../../dist/index.js.gz"),
             ContentEncoding::GZip,
             ContentType::JS,
         ),
         (
-            "/index.css",
+            "/index.css".to_string(),
             include_bytes!("../../../dist/index.css"),
             ContentEncoding::Identity,
             ContentType::CSS,
         ),
         (
-            "/loader.webp",
+            "/loader.webp".to_string(),
             include_bytes!("../../../dist/loader.webp"),
             ContentEncoding::Identity,
             ContentType::WEBP,
         ),
         (
-            "/favicon.ico",
+            "/favicon.ico".to_string(),
             include_bytes!("../../../dist/favicon.ico"),
             ContentEncoding::Identity,
             ContentType::ICO,
@@ -142,10 +145,26 @@ fn get_assets() -> Vec<(&'static str, &'static [u8], ContentEncoding, ContentTyp
         // Required to make II available on the identity.internetcomputer.org domain.
         // See https://github.com/r-birkner/portal/blob/rjb/custom-domains-docs-v2/docs/developer-docs/production/custom-domain/custom-domain.md#custom-domains-on-the-boundary-nodes
         (
-            "/.well-known/ic-domains",
+            "/.well-known/ic-domains".to_string(),
             b"identity.internetcomputer.org",
             ContentEncoding::Identity,
             ContentType::OCTETSTREAM,
         ),
-    ]
+    ];
+
+    for icon in ICONS.files() {
+        let content_type = match icon.path().extension().unwrap().to_str().unwrap() {
+            "svg" => ContentType::SVG,
+            "webp" => ContentType::WEBP,
+            "png" => ContentType::PNG,
+            ext => panic!("Unexpected icon extension: {}", ext),
+        };
+        let name = icon.path().file_name().unwrap().to_str().unwrap();
+        let content = icon.contents();
+        let content_encoding = ContentEncoding::Identity;
+        let asset = "/showcase/icons/".to_string().add(name);
+        ic_cdk::println!("Adding icon: {}", asset);
+        assets.push((asset, content, content_encoding, content_type));
+    }
+    assets
 }
