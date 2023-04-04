@@ -93,10 +93,10 @@ pub fn init_assets() {
 
 // Get all the assets. Duplicated assets like index.html are shared and generally all assets are
 // prepared only once (like injecting the canister ID).
-fn get_assets() -> [(&'static str, &'static [u8], ContentEncoding, ContentType); 8] {
+fn get_assets() -> Vec<(&'static str, &'static [u8], ContentEncoding, ContentType)> {
     let index_html: &[u8] = INDEX_HTML_STR.as_bytes();
     let about_html: &[u8] = ABOUT_HTML_STR.as_bytes();
-    [
+    vec![
         (
             "/",
             index_html,
