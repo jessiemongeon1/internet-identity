@@ -6,6 +6,7 @@ use crate::{http, state};
 use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
 use ic_cdk::api;
+use include_dir::{include_dir, Dir};
 use lazy_static::lazy_static;
 use sha2::Digest;
 
@@ -64,7 +65,11 @@ lazy_static! {
     static ref ABOUT_HTML_STR: String = {
         fixup_html(include_str!("../../../dist/about.html"))
     };
+
+    static ref FOO: String = include_str!("../../../dist/dapps.json").to_string();
+
 }
+static PROJECT_DIR: Dir = include_dir!("$CARGO_MANIFEST_DIR/../../dist/icons");
 
 // used both in init and post_upgrade
 pub fn init_assets() {
