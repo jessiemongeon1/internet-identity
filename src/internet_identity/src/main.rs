@@ -65,8 +65,8 @@ fn exit_device_registration_mode(anchor_number: AnchorNumber) {
 async fn add_tentative_device(
     anchor_number: AnchorNumber,
     device_data: DeviceData,
-) -> AddTentativeDeviceResponse {
-    tentative_device_registration::add_tentative_device(anchor_number, device_data).await
+) -> Option<AddTentativeDeviceResponse> {
+    Some(tentative_device_registration::add_tentative_device(anchor_number, device_data).await)
 }
 
 #[update]
@@ -74,14 +74,14 @@ async fn add_tentative_device(
 fn verify_tentative_device(
     anchor_number: AnchorNumber,
     user_verification_code: DeviceVerificationCode,
-) -> VerifyTentativeDeviceResponse {
-    authenticated_anchor_operation(anchor_number, |anchor| {
+) -> Option<VerifyTentativeDeviceResponse> {
+    Some(authenticated_anchor_operation(anchor_number, |anchor| {
         tentative_device_registration::verify_tentative_device(
             anchor,
             anchor_number,
             user_verification_code,
         )
-    })
+    }))
 }
 
 #[update]
@@ -96,8 +96,12 @@ fn register(
     device_data: DeviceData,
     challenge_result: ChallengeAttempt,
     temp_key: Option<Principal>,
-) -> RegisterResponse {
-    anchor_management::registration::register(device_data, challenge_result, temp_key)
+) -> Option<RegisterResponse> {
+    Some(anchor_management::registration::register(
+        device_data,
+        challenge_result,
+        temp_key,
+    ))
 }
 
 #[update]
