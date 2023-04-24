@@ -224,7 +224,7 @@ export const idlFactory = ({ IDL }) => {
     'add' : IDL.Func([UserNumber, DeviceData], [], []),
     'add_tentative_device' : IDL.Func(
         [UserNumber, DeviceData],
-        [AddTentativeDeviceResponse],
+        [IDL.Opt(AddTentativeDeviceResponse)],
         [],
       ),
     'create_challenge' : IDL.Func([], [Challenge], []),
@@ -259,7 +259,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'register' : IDL.Func(
         [DeviceData, ChallengeResult, IDL.Opt(IDL.Principal)],
-        [RegisterResponse],
+        [IDL.Opt(RegisterResponse)],
         [],
       ),
     'remove' : IDL.Func([UserNumber, DeviceKey], [], []),
@@ -268,7 +268,7 @@ export const idlFactory = ({ IDL }) => {
     'update' : IDL.Func([UserNumber, DeviceKey, DeviceData], [], []),
     'verify_tentative_device' : IDL.Func(
         [UserNumber, IDL.Text],
-        [VerifyTentativeDeviceResponse],
+        [IDL.Opt(VerifyTentativeDeviceResponse)],
         [],
       ),
   });
