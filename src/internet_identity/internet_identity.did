@@ -112,6 +112,7 @@ type RegisterResponse = variant {
     canister_full;
     // The challenge was not successful.
     bad_challenge;
+    foo;
 };
 
 type AddTentativeDeviceResponse = variant {
