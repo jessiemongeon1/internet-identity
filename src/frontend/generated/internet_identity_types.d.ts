@@ -167,7 +167,8 @@ export interface RateLimitConfig {
   'max_tokens' : bigint,
   'time_per_token_ns' : bigint,
 }
-export type RegisterResponse = { 'bad_challenge' : null } |
+export type RegisterResponse = { 'foo' : null } |
+  { 'bad_challenge' : null } |
   { 'canister_full' : null } |
   { 'registered' : { 'user_number' : UserNumber } };
 export type SessionKey = PublicKey;
