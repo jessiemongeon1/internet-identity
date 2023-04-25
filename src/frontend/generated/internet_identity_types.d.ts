@@ -201,7 +201,7 @@ export interface _SERVICE {
   'add' : ActorMethod<[UserNumber, DeviceData], undefined>,
   'add_tentative_device' : ActorMethod<
     [UserNumber, DeviceData],
-    AddTentativeDeviceResponse
+    [] | [AddTentativeDeviceResponse]
   >,
   'create_challenge' : ActorMethod<[], Challenge>,
   'deploy_archive' : ActorMethod<[Uint8Array | number[]], DeployArchiveResult>,
@@ -225,7 +225,7 @@ export interface _SERVICE {
   >,
   'register' : ActorMethod<
     [DeviceData, ChallengeResult, [] | [Principal]],
-    RegisterResponse
+    [] | [RegisterResponse]
   >,
   'remove' : ActorMethod<[UserNumber, DeviceKey], undefined>,
   'replace' : ActorMethod<[UserNumber, DeviceKey, DeviceData], undefined>,
@@ -233,6 +233,6 @@ export interface _SERVICE {
   'update' : ActorMethod<[UserNumber, DeviceKey, DeviceData], undefined>,
   'verify_tentative_device' : ActorMethod<
     [UserNumber, string],
-    VerifyTentativeDeviceResponse
+    [] | [VerifyTentativeDeviceResponse]
   >,
 }
