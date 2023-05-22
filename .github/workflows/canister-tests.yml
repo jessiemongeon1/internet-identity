@@ -313,7 +313,7 @@ jobs:
           rsync -av /tmp/target-canister/ "$PWD/target/"
 
       - name: Canister code (build)
-        run: cargo build --tests --release --frozen
+        run: cargo build --tests --release --frozen --verbose
 
       - name: Canister code (save to cache)
         if: steps.cache-canister.outputs.cache-hit != 'true'
