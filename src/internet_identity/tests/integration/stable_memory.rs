@@ -186,7 +186,6 @@ fn should_issue_same_principal_after_restoring_backup() -> Result<(), CallError>
     );
 
     let principal = api::get_principal(&env, canister_id, principal, 10_030, "example.com")?;
-    assert_eq!(Principal::self_authenticating(user_key.clone()), principal);
     assert_eq!(Principal::self_authenticating(user_key), principal);
     Ok(())
 }
