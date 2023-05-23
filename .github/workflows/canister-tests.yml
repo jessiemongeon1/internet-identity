@@ -260,8 +260,8 @@ jobs:
       - name: Cargo cache (recovery)
         if: steps.cache-dot-cargo.outputs.cache-hit == 'true'
         run: |
-          # add a second to offset rounding errors in fractional seconds
-          mtime=$(date ${{ matrix.os == 'macos-latest' && '-v+1S' || '--date=+1seconds' }} +%Y%m%d%H%M.%S)
+          # add a few second to offset rounding errors in fractional seconds
+          mtime=$(date ${{ matrix.os == 'macos-latest' && '-v+2S' || '--date=+2seconds' }} +%Y%m%d%H%M.%S)
           echo "timestamp of restored .cargo: $mtime"
           rsync -av "/tmp/dot-cargo/" "$HOME/.cargo/"
           find "$HOME/.cargo/" -exec touch -t "$mtime" {} +
@@ -284,8 +284,8 @@ jobs:
       - name: Dependencies (recovery)
         if: steps.cache-deps.outputs.cache-hit == 'true'
         run: |
-          # add a second to offset rounding errors in fractional seconds
-          mtime=$(date ${{ matrix.os == 'macos-latest' && '-v+1S' || '--date=+1seconds' }} +%Y%m%d%H%M.%S)
+          # add a few second to offset rounding errors in fractional seconds
+          mtime=$(date ${{ matrix.os == 'macos-latest' && '-v+2S' || '--date=+2seconds' }} +%Y%m%d%H%M.%S)
           echo "timestamp of restored target (deps): $mtime"
           rsync -av "/tmp/target-deps/" "$PWD/target/"
           find ./target -exec touch -t "$mtime" {} +
@@ -313,8 +313,8 @@ jobs:
       - name: Canister code (recover)
         if: steps.cache-canister.outputs.cache-hit == 'true'
         run: |
-          # add a second to offset rounding errors in fractional seconds
-          mtime=$(date ${{ matrix.os == 'macos-latest' && '-v+1S' || '--date=+1seconds' }} +%Y%m%d%H%M.%S)
+          # add a few second to offset rounding errors in fractional seconds
+          mtime=$(date ${{ matrix.os == 'macos-latest' && '-v+2S' || '--date=+2seconds' }} +%Y%m%d%H%M.%S)
           echo "timestamp of restored target (canister): $mtime"
           # Set timestamps so that --compare-dest below knows what (not) to save
           find /tmp/target-canister -exec touch -t "$mtime" {} +
