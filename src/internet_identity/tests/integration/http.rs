@@ -64,10 +64,15 @@ fn ii_canister_serves_http_assets() -> Result<(), CallError> {
             time(&env) as u128,
             Duration::from_secs(300).as_nanos(),
             &env.root_key(),
-            MIN_VERIFICATION_VERSION,
+            2,
         )
         .unwrap_or_else(|e| panic!("validation for asset \"{asset}\" failed: {e}"));
-        assert!(result.passed);
+        assert!(
+            result.passed,
+            "validation for asset \"{:?}\" failed: {:?}",
+            asset, result
+        );
+        println!("{:?}", result);
     }
     Ok(())
 }

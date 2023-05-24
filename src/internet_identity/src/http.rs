@@ -1,12 +1,14 @@
 use crate::archive::ArchiveState;
 use crate::assets::ContentType;
-use crate::{assets, state, IC0_APP_DOMAIN, INTERNETCOMPUTER_ORG_DOMAIN, LABEL_ASSETS, LABEL_SIG};
+use crate::{
+    assets, state, IC0_APP_DOMAIN, INTERNETCOMPUTER_ORG_DOMAIN, LABEL_ASSETS, LABEL_EXPR, LABEL_SIG,
+};
 use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
 use ic_cdk::api::stable::stable64_size;
 use ic_cdk::api::{data_certificate, time};
 use ic_cdk::trap;
-use ic_certified_map::HashTree;
+use ic_certified_map::{AsHashTree, HashTree};
 use ic_metrics_encoder::MetricsEncoder;
 use internet_identity_interface::http_gateway::{HeaderField, HttpRequest, HttpResponse};
 use serde::Serialize;
@@ -288,7 +290,7 @@ fn encode_metrics(w: &mut MetricsEncoder<Vec<u8>>) -> std::io::Result<()> {
 /// List of recommended security headers as per https://owasp.org/www-project-secure-headers/
 /// These headers enable browser security features (like limit access to platform apis and set
 /// iFrame policies, etc.).
-fn security_headers() -> Vec<HeaderField> {
+pub fn security_headers() -> Vec<HeaderField> {
     vec![
         ("X-Frame-Options".to_string(), "DENY".to_string()),
         ("X-Content-Type-Options".to_string(), "nosniff".to_string()),
@@ -414,22 +416,43 @@ fn make_asset_certificate_header(asset_name: &str) -> (String, String) {
     let certificate = data_certificate().unwrap_or_else(|| {
         trap("data certificate is only available in query calls");
     });
-    state::asset_hashes_and_sigs(|asset_hashes, sigs| {
-        let witness = asset_hashes.witness(asset_name.as_bytes());
+    state::asset_hashes_and_sigs(|asset_hashes_v1, asset_hashes_v2, sigs| {
+        let mut path: Vec<String> = asset_name.split('/').map(str::to_string).collect();
+        path.remove(0);
+        path.push("<$>".to_string());
+
+        let path_bytes: Vec<Vec<u8>> = path.iter().map(String::as_bytes).map(Vec::from).collect();
+        let witness = asset_hashes_v2.witness(&path_bytes);
+
         let tree = ic_certified_map::fork(
-            ic_certified_map::labeled(LABEL_ASSETS, witness),
+            ic_certified_map::fork(
+                HashTree::Pruned(ic_certified_map::labeled_hash(
+                    LABEL_ASSETS,
+                    &asset_hashes_v1.root_hash(),
+                )),
+                ic_certified_map::labeled(LABEL_EXPR, witness),
+            ),
             HashTree::Pruned(ic_certified_map::labeled_hash(LABEL_SIG, &sigs.root_hash())),
         );
-        let mut serializer = serde_cbor::ser::Serializer::new(vec![]);
-        serializer.self_describe().unwrap();
-        tree.serialize(&mut serializer)
+
+        // add the http_expr element (that we don't have in the witness path due to manual subtree assembly)
+        path.insert(0, "http_expr".to_string());
+
+        let mut expr_path_serializer = serde_cbor::ser::Serializer::new(vec![]);
+        expr_path_serializer.self_describe().unwrap();
+        path.serialize(&mut expr_path_serializer)
+            .unwrap_or_else(|e| trap(&format!("failed to serialize a expr path: {e}")));
+        let mut tree_serializer = serde_cbor::ser::Serializer::new(vec![]);
+        tree_serializer.self_describe().unwrap();
+        tree.serialize(&mut tree_serializer)
             .unwrap_or_else(|e| trap(&format!("failed to serialize a hash tree: {e}")));
         (
             "IC-Certificate".to_string(),
             format!(
-                "certificate=:{}:, tree=:{}:",
+                "certificate=:{}:, tree=:{}:, expr_path=:{}:, version=2",
                 BASE64.encode(&certificate),
-                BASE64.encode(serializer.into_inner())
+                BASE64.encode(tree_serializer.into_inner()),
+                BASE64.encode(expr_path_serializer.into_inner()),
             ),
         )
     })

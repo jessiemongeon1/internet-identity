@@ -1,6 +1,9 @@
 use crate::active_anchor_stats::IIDomain;
 use crate::state::{persistent_state_mut, AssetHashes};
-use crate::{hash, state, update_root_hash, DAY_NS, LABEL_ASSETS, LABEL_SIG, MINUTE_NS};
+use crate::tree::NestedTree;
+use crate::{
+    hash, state, update_root_hash, DAY_NS, LABEL_ASSETS, LABEL_EXPR, LABEL_SIG, MINUTE_NS,
+};
 use candid::Principal;
 use ic_cdk::api::{data_certificate, time};
 use ic_cdk::{id, trap};
@@ -127,9 +130,10 @@ pub fn get_delegation(
 ) -> GetDelegationResponse {
     check_frontend_length(&frontend);
 
-    state::asset_hashes_and_sigs(|asset_hashes, sigs| {
+    state::asset_hashes_and_sigs(|asset_hashes_v1, asset_hashes_v2, sigs| {
         match get_signature(
-            asset_hashes,
+            asset_hashes_v1,
+            asset_hashes_v2,
             sigs,
             session_key.clone(),
             calculate_seed(anchor_number, &frontend),
@@ -217,7 +221,8 @@ fn delegation_signature_msg_hash(d: &Delegation) -> Hash {
 }
 
 fn get_signature(
-    asset_hashes: &AssetHashes,
+    asset_hashes_v1: &AssetHashes,
+    asset_hashes_v2: &NestedTree<Vec<u8>, Vec<u8>>,
     sigs: &SignatureMap,
     pk: PublicKey,
     seed: Hash,
@@ -244,10 +249,16 @@ fn get_signature(
     }
 
     let tree = ic_certified_map::fork(
-        HashTree::Pruned(ic_certified_map::labeled_hash(
-            LABEL_ASSETS,
-            &asset_hashes.root_hash(),
-        )),
+        ic_certified_map::fork(
+            HashTree::Pruned(ic_certified_map::labeled_hash(
+                LABEL_ASSETS,
+                &asset_hashes_v1.root_hash(),
+            )),
+            HashTree::Pruned(ic_certified_map::labeled_hash(
+                LABEL_EXPR,
+                &asset_hashes_v2.root_hash(),
+            )),
+        ),
         ic_certified_map::labeled(LABEL_SIG, witness),
     );
 

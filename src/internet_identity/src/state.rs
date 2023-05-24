@@ -2,6 +2,7 @@ use crate::archive::{ArchiveData, ArchiveState, ArchiveStatusCache};
 use crate::state::temp_keys::TempKeys;
 use crate::storage::anchor::Anchor;
 use crate::storage::{StableMemory, DEFAULT_RANGE_SIZE};
+use crate::tree::NestedTree;
 use crate::{Salt, Storage};
 use candid::{CandidType, Deserialize, Principal};
 use ic_cdk::api::time;
@@ -126,7 +127,8 @@ struct State {
     sigs: RefCell<SignatureMap>,
     // Temporary keys that can be used in lieu of a particular device
     temp_keys: RefCell<TempKeys>,
-    asset_hashes: RefCell<AssetHashes>,
+    asset_hashes_v1: RefCell<AssetHashes>,
+    asset_hashes_v2: RefCell<NestedTree<Vec<u8>, Vec<u8>>>,
     last_upgrade_timestamp: Cell<Timestamp>,
     // note: we COULD persist this through upgrades, although this is currently NOT persisted
     // through upgrades
@@ -153,7 +155,8 @@ impl Default for State {
             storage_state: RefCell::new(StorageState::Uninitialised),
             sigs: RefCell::new(SignatureMap::default()),
             temp_keys: RefCell::new(TempKeys::default()),
-            asset_hashes: RefCell::new(AssetHashes::default()),
+            asset_hashes_v1: RefCell::new(AssetHashes::default()),
+            asset_hashes_v2: RefCell::new(NestedTree::default()),
             last_upgrade_timestamp: Cell::new(0),
             inflight_challenges: RefCell::new(HashMap::new()),
             tentative_device_registrations: RefCell::new(HashMap::new()),
@@ -313,14 +316,30 @@ pub fn assets<R>(f: impl FnOnce(&Assets) -> R) -> R {
     ASSETS.with(|assets| f(&assets.borrow()))
 }
 
-pub fn assets_and_hashes_mut<R>(f: impl FnOnce(&mut Assets, &mut AssetHashes) -> R) -> R {
+pub fn assets_and_hashes_mut<R>(
+    f: impl FnOnce(&mut Assets, &mut AssetHashes, &mut NestedTree<Vec<u8>, Vec<u8>>) -> R,
+) -> R {
     ASSETS.with(|assets| {
-        STATE.with(|s| f(&mut assets.borrow_mut(), &mut s.asset_hashes.borrow_mut()))
+        STATE.with(|s| {
+            f(
+                &mut assets.borrow_mut(),
+                &mut s.asset_hashes_v1.borrow_mut(),
+                &mut s.asset_hashes_v2.borrow_mut(),
+            )
+        })
     })
 }
 
-pub fn asset_hashes_and_sigs<R>(f: impl FnOnce(&AssetHashes, &SignatureMap) -> R) -> R {
-    STATE.with(|s| f(&s.asset_hashes.borrow(), &s.sigs.borrow()))
+pub fn asset_hashes_and_sigs<R>(
+    f: impl FnOnce(&AssetHashes, &NestedTree<Vec<u8>, Vec<u8>>, &SignatureMap) -> R,
+) -> R {
+    STATE.with(|s| {
+        f(
+            &s.asset_hashes_v1.borrow(),
+            &s.asset_hashes_v2.borrow(),
+            &s.sigs.borrow(),
+        )
+    })
 }
 
 pub fn signature_map<R>(f: impl FnOnce(&SignatureMap) -> R) -> R {

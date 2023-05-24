@@ -6,7 +6,7 @@ use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::convert::AsRef;
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub enum Value<'a> {
     Bytes(#[serde(with = "serde_bytes")] &'a [u8]),
     String(&'a str),
