@@ -1,5 +1,8 @@
 use crate::archive::ArchiveState;
-use crate::assets::{ContentType, EXACT_MATCH_TERMINATOR, IC_CERTIFICATE_EXPRESSION};
+use crate::assets::{
+    ContentType, EXACT_MATCH_TERMINATOR, IC_CERTIFICATE_EXPRESSION,
+    METRICS_IC_CERTIFICATE_EXPRESSION,
+};
 use crate::{assets, state, IC0_APP_DOMAIN, INTERNETCOMPUTER_ORG_DOMAIN, LABEL_SIG};
 use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
@@ -66,6 +69,10 @@ pub fn http_request(req: HttpRequest) -> HttpResponse {
                         ("Content-Length".to_string(), body.len().to_string()),
                     ];
                     headers.append(&mut security_headers());
+                    headers.append(&mut asset_certificate_headers_v2(
+                        "/metrics",
+                        METRICS_IC_CERTIFICATE_EXPRESSION,
+                    ));
                     HttpResponse {
                         status_code: 200,
                         headers,
@@ -90,7 +97,10 @@ pub fn http_request(req: HttpRequest) -> HttpResponse {
                         let mut headers = security_headers();
                         let mut certificate_headers = match req.certificate_version {
                             None | Some(1) => asset_certificate_headers_v1(probably_an_asset),
-                            Some(2) => asset_certificate_headers_v2(probably_an_asset),
+                            Some(2) => asset_certificate_headers_v2(
+                                probably_an_asset,
+                                IC_CERTIFICATE_EXPRESSION,
+                            ),
                             _ => trap("Unsupported certificate version."),
                         };
                         headers.append(&mut certificate_headers);
@@ -443,7 +453,10 @@ fn asset_certificate_headers_v1(asset_name: &str) -> Vec<(String, String)> {
     })
 }
 
-fn asset_certificate_headers_v2(absolute_path: &str) -> Vec<(String, String)> {
+fn asset_certificate_headers_v2(
+    absolute_path: &str,
+    certificate_expression: &str,
+) -> Vec<(String, String)> {
     assert!(absolute_path.starts_with('/'));
 
     let certificate = data_certificate().unwrap_or_else(|| {
@@ -483,7 +496,7 @@ fn asset_certificate_headers_v2(absolute_path: &str) -> Vec<(String, String)> {
             ),
             (
                 IC_CERTIFICATE_EXPRESSION_HEADER.to_string(),
-                IC_CERTIFICATE_EXPRESSION.to_string(),
+                certificate_expression.to_string(),
             ),
         ]
     })

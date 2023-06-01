@@ -26,6 +26,10 @@ pub const IC_CERTIFICATE_EXPRESSION: &str =
     "default_certification(ValidationArgs{certification:Certification{no_request_certification: Empty{},\
     response_certification:ResponseCertification{response_header_exclusions:ResponseHeaderList{headers:[]}}}})";
 
+// Certified opt-out from certification for dynamic content that is not security critical.
+pub const METRICS_IC_CERTIFICATE_EXPRESSION: &str =
+    "default_certification(ValidationArgs{no_certification: Empty{}})";
+
 #[derive(Debug, Default, Clone)]
 pub struct CertifiedAssets {
     pub assets: HashMap<String, (Vec<HeaderField>, Vec<u8>)>,
@@ -124,6 +128,7 @@ lazy_static! {
     };
 
      pub static ref EXPR_HASH: Hash = sha2::Sha256::digest(IC_CERTIFICATE_EXPRESSION).into();
+     pub static ref METRICS_EXPR_HASH: Hash = sha2::Sha256::digest(METRICS_IC_CERTIFICATE_EXPRESSION).into();
 }
 
 // used both in init and post_upgrade
@@ -165,6 +170,16 @@ pub fn init_assets() {
 
             certified_assets.assets.insert(path, (headers, content));
         }
+
+        // Exclude /metrics from certification (v2 only)
+        certified_assets.certification_v2.insert(
+            &[
+                "metrics".as_bytes().to_vec(),
+                EXACT_MATCH_TERMINATOR.as_bytes().to_vec(),
+                Vec::from(METRICS_EXPR_HASH.as_slice()),
+            ],
+            vec![],
+        )
     });
 }
 

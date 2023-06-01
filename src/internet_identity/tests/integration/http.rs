@@ -132,6 +132,37 @@ fn should_set_cache_control_for_fonts() -> Result<(), CallError> {
     Ok(())
 }
 
+/// Verifies that the /metrics endpoint passes certification.
+#[test]
+fn should_opt_out_of_certification_for_metrics() -> Result<(), CallError> {
+    const CERTIFICATION_VERSION: u16 = 2;
+    let env = env();
+    let canister_id = install_ii_canister(&env, II_WASM.clone());
+
+    let request = HttpRequest {
+        method: "GET".to_string(),
+        url: "/metrics".to_string(),
+        headers: vec![],
+        body: ByteBuf::new(),
+        certificate_version: Some(CERTIFICATION_VERSION),
+    };
+    let http_response = http_request(&env, canister_id, &request)?;
+
+    assert_eq!(http_response.status_code, 200);
+
+    let result = verify_response_certification(
+        &env,
+        canister_id,
+        request,
+        http_response,
+        CERTIFICATION_VERSION,
+    );
+    assert!(result.passed);
+    assert_eq!(result.verification_version, CERTIFICATION_VERSION);
+
+    Ok(())
+}
+
 /// Verifies that all expected metrics are available via the HTTP endpoint.
 #[test]
 fn ii_canister_serves_http_metrics() -> Result<(), CallError> {
