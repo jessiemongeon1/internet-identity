@@ -1,12 +1,13 @@
-import { mkAnchorInput } from "$src/components/anchorInput";
 import { checkmarkIcon, warningIcon } from "$src/components/icons";
 import { mainWindow } from "$src/components/mainWindow";
 import { I18n } from "$src/i18n";
 import { renderPage, withRef } from "$src/utils/lit-html";
 import { Chan } from "$src/utils/utils";
-import { html, TemplateResult } from "lit-html";
+import { TemplateResult } from "lit-html";
 import { asyncReplace } from "lit-html/directives/async-replace.js";
+import { ifDefined } from "lit-html/directives/if-defined.js";
 import { createRef, ref, Ref } from "lit-html/directives/ref.js";
+import { html, literal, StaticValue } from "lit-html/static.js";
 import { phraseStepper } from "./stepper";
 
 import copyJson from "./confirmSeedPhrase.json";
@@ -21,11 +22,9 @@ type Word = { word: string } & (
 export const checkIndices = [0, 1, 23];
 
 // Check that a word has been input correctly
-const checkWord = (word: Word): boolean =>
-  // If the word is not one that needs checking, then return
-  !word.check ||
+const checkExpected = (elem: Ref<HTMLInputElement>): boolean =>
   // otherwise, make sure the input's value matches the HTML data-expected attribute
-  withRef(word.elem, (elem) => elem.value === elem.dataset.expected) === true;
+  withRef(elem, (elem) => elem.value === elem.dataset.expected) === true;
 
 const confirmSeedPhraseTemplate = ({
   userNumberWord,
@@ -53,65 +52,24 @@ const confirmSeedPhraseTemplate = ({
     }
   });
 
-  // if the identity number has been re-input correctly
-  const identityInputState = new Chan<"pending" | "wrong" | "correct">(
-    "pending"
-  );
   // if all "check" words have been re-input correctly
   const wordsOk = new Chan<boolean>(false);
+  // if the number has been re-input correctly
+  const numberOk = new Chan<boolean>(false);
   // if the confirmation button is disabled
-  const disabled = identityInputState
+  const disabled = numberOk
     .zip(wordsOk)
-    .map(([idOk, wdsOk]) => !(idOk === "correct" && wdsOk));
+    .map(([nbOk, wdsOk]) => !(nbOk && wdsOk));
 
-  // The anchor input element/component
-  const anchorInput = mkAnchorInput({
-    onInput: (a) => {
-      // When inputting a value, we don't report incorrect values as the
-      // user types; we only react if the value is actually correct to let
-      // the user know they can move on to the next field
-      const actual = BigInt(a);
-      const expected = BigInt(userNumberWord);
-      if (actual === expected) {
-        identityInputState.send("correct");
-      } else {
-        identityInputState.send("pending");
-      }
-    },
-    onChange: (a) => {
-      // When the user leaves the field, we do warn them if the value
-      // is not correct. As a fallback we do set it to 'correct' if
-      // the value is correct, although in practice this will already
-      // have been set by onInput.
-      const actual = BigInt(a);
-      const expected = BigInt(userNumberWord);
-
-      if (actual === expected) {
-        identityInputState.send("correct");
-      } else {
-        identityInputState.send("wrong");
-      }
-    },
-    onSubmit: (userNumber: bigint) => {
-      // Similar to onChange, although we don't really expect the user
-      // to "submit" (i.e. hit "enter")
-      const actual = userNumber;
-      const expected = BigInt(userNumberWord);
-      if (actual === expected) {
-        identityInputState.send("correct");
-      } else {
-        identityInputState.send("wrong");
-      }
-    },
-    classes: identityInputState.map(
-      (state) =>
-        ({
-          pending: [],
-          correct: ["c-input--anchor__wrap--valid"],
-          wrong: ["c-input--anchor__wrap--error"],
-        }[state])
-    ),
-    dataExpected: userNumberWord,
+  const userNumberInputRef = createRef<HTMLInputElement>();
+  const userNumberInput = nudgeWord({
+    update: () => numberOk.send(checkExpected(userNumberInputRef)),
+    expected: userNumberWord,
+    assignTo: userNumberInputRef,
+    index: "#",
+    tag: literal`div`,
+    classes: ["c-list--recovery-word--important"],
+    placeholder: "Identity number",
   });
 
   const pageContentSlot = html`
@@ -121,23 +79,21 @@ const confirmSeedPhraseTemplate = ({
         <h1 class="t-title t-title--main">${copy.title}</h1>
         <p class="t-lead">${copy.header}</p>
       </hgroup>
-      ${anchorInput.template}
       <div class="c-input c-input--recovery l-stack">
-      <div
-
-            class="c-list--recovery-word c-list--recovery-word--important c-list--recovery-word__attention"
-            style="--index: '#';"
-      >
-        <input 
-            placeholder="Identity number">
-        </input>
-        </div>
+        ${userNumberInput}
         <ol class="c-list c-list--recovery">
           ${words.map((word, i) =>
             wordTemplate({
               word,
               /* on word update, re-check all words */
-              update: () => wordsOk.send(words.every(checkWord)),
+              update: () =>
+                wordsOk.send(
+                  words.every(
+                    (word) =>
+                      // If the word is not one that needs checking, then ok
+                      !word.check || checkExpected(word.elem)
+                  )
+                ),
               i,
             })
           )}
@@ -193,8 +149,31 @@ export const wordTemplate = ({
     </li>`;
   }
 
-  // TODO: extract all of this into function and re-use for anchor number
+  return nudgeWord({
+    update,
+    expected: word.word,
+    index: `${i + 1}`,
+    assignTo: word.elem,
+  });
+};
 
+const nudgeWord = ({
+  update,
+  expected,
+  index,
+  assignTo,
+  tag = literal`li`,
+  classes: classes_,
+  placeholder,
+}: {
+  update: () => void;
+  expected: string;
+  index: string;
+  tag?: StaticValue;
+  assignTo: Ref<HTMLInputElement>;
+  classes?: string[];
+  placeholder?: string;
+}): TemplateResult => {
   type State = "pending" | "correct" | "incorrect";
   const state = new Chan<State>("pending");
   // Visual feedback depending on state
@@ -220,9 +199,12 @@ export const wordTemplate = ({
       }[s])
   );
 
-  return html`<li
-    style="--index: '${i + 1}'"
-    class="c-list--recovery-word ${asyncReplace(clazz)}"
+  const classes = classes_ ?? [];
+  classes.push("c-list--recovery-word");
+
+  return html`<${tag}
+    style="--index: '${index}'"
+    class="${classes.join(" ")} ${asyncReplace(clazz)}"
   >
     ${asyncReplace(icon)}
     <input
@@ -230,22 +212,23 @@ export const wordTemplate = ({
       autocapitalize="none"
       spellcheck="false"
       class="c-recoveryInput"
-      ${ref(word.elem)}
-      data-expected=${word.word}
+      ${ref(assignTo)}
+      data-expected=${expected}
       data-state=${asyncReplace(state)}
+      placeholder=${ifDefined(placeholder)}
       @input=${() => {
         /* On input, immediately show word as correct when correct, but don't show if a
          * word is incorrect (done only when leaving the field) to not freak out user as they type */
-        state.send(checkWord(word) ? "correct" : "pending");
+        state.send(checkExpected(assignTo) ? "correct" : "pending");
         update();
       }}
       @change=${() => {
         /* When leaving the field show if the word is corrrect or not */
-        state.send(checkWord(word) ? "correct" : "incorrect");
+        state.send(checkExpected(assignTo) ? "correct" : "incorrect");
         update();
       }}
     />&nbsp;
-  </li>`;
+  </${tag}>`;
 };
 
 export const confirmSeedPhrasePage = renderPage(confirmSeedPhraseTemplate);
