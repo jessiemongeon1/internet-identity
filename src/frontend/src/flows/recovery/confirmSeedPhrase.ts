@@ -123,6 +123,15 @@ const confirmSeedPhraseTemplate = ({
       </hgroup>
       ${anchorInput.template}
       <div class="c-input c-input--recovery l-stack">
+      <div
+
+            class="c-list--recovery-word c-list--recovery-word--important c-list--recovery-word__attention"
+            style="--index: '#';"
+      >
+        <input 
+            placeholder="Identity number">
+        </input>
+        </div>
         <ol class="c-list c-list--recovery">
           ${words.map((word, i) =>
             wordTemplate({
@@ -183,6 +192,8 @@ export const wordTemplate = ({
       ${word.word}
     </li>`;
   }
+
+  // TODO: extract all of this into function and re-use for anchor number
 
   type State = "pending" | "correct" | "incorrect";
   const state = new Chan<State>("pending");

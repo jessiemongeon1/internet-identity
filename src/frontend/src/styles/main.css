@@ -1840,6 +1840,18 @@ by all browsers (FF is missing) */
   color: transparent;
 }
 
+.c-list--recovery-word--important {
+  display: block;
+  width: calc(66.66% - 1rem); /* TODO: mobile */
+  margin: 0.5rem auto;
+}
+
+@media screen and (max-width: 512px) {
+  .c-list--recovery-word--important {
+    width: calc(100% - 1rem);
+  }
+}
+
 .c-recoveryInput {
   display: block;
 
