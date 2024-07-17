@@ -293,7 +293,7 @@ The summary is given by the Candid interface:
 
 <!-- The '_attachments/` bit is an implementation detail of the docusaurus deploy -->
 
-``` candid name=https://raw.githubusercontent.com/dfinity/internet-identity/main/src/internet_identity/internet_identity.did
+``` candid file=../src/internet_identity/internet_identity.did
 ```
 
 
