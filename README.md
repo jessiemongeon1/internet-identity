@@ -1,15 +1,11 @@
-<p align="center"><a href="https://identity.ic0.app" target="_blank" rel="noopener noreferrer"><img width="600" src="./ii-logo.png" alt="Internet Identity"/></a></p>
-
-<p align="center">
-    <a href="https://github.com/dfinity/internet-identity/actions/workflows/canister-tests.yml"><img src="https://github.com/dfinity/internet-identity/actions/workflows/canister-tests.yml/badge.svg" alt="Canister Tests" /></a>
-    <a href="https://github.com/dfinity/internet-identity/actions/workflows/rust.yml"><img src="https://github.com/dfinity/internet-identity/actions/workflows/rust.yml/badge.svg" alt="Rust" /></a>
-    <a href="https://github.com/dfinity/internet-identity/actions/workflows/frontend-checks.yml"><img src="https://github.com/dfinity/internet-identity/actions/workflows/frontend-checks.yml/badge.svg" alt="Frontend checks and lints" /></a>
-    <a href="https://github.com/dfinity/internet-identity/releases"><img src="https://img.shields.io/github/downloads/dfinity/internet-identity/total?label=downloads&logo=github" alt="GitHub all releases" /></a>
-</p>
-
-<p align="center">
-    🔗 <a href="https://identity.ic0.app">https://identity.ic0.app</a> • 📜 <a href="https://internetcomputer.org/docs/current/references/ii-spec">Specification</a> <br/> ― <br/>📚 <a href="https://forum.dfinity.org/c/internet-identity/32">Forum</a> • 🚑 <a href="https://github.com/dfinity/internet-identity/issues/new">Report an Issue</a> • 📞 <a href="https://discord.gg/E9FxceAg2j">Discord</a>
-</p>
+<><p align="center"><a href="https://identity.ic0.app" target="_blank" rel="noopener noreferrer"><img width="600" src="./ii-logo.png" alt="Internet Identity" /></a></p><p align="center">
+<a href="https://github.com/dfinity/internet-identity/actions/workflows/canister-tests.yml"><img src="https://github.com/dfinity/internet-identity/actions/workflows/canister-tests.yml/badge.svg" alt="Canister Tests" /></a>
+<a href="https://github.com/dfinity/internet-identity/actions/workflows/rust.yml"><img src="https://github.com/dfinity/internet-identity/actions/workflows/rust.yml/badge.svg" alt="Rust" /></a>
+<a href="https://github.com/dfinity/internet-identity/actions/workflows/frontend-checks.yml"><img src="https://github.com/dfinity/internet-identity/actions/workflows/frontend-checks.yml/badge.svg" alt="Frontend checks and lints" /></a>
+<a href="https://github.com/dfinity/internet-identity/releases"><img src="https://img.shields.io/github/downloads/dfinity/internet-identity/total?label=downloads&logo=github" alt="GitHub all releases" /></a>
+</p><p align="center">
+🔗 <a href="https://identity.ic0.app">https://identity.ic0.app</a> • 📜 <a href="https://internetcomputer.org/docs/current/references/ii-spec">Specification</a> <br /> ― <br />📚 <a href="https://forum.dfinity.org/c/internet-identity/32">Forum</a> • 🚑 <a href="https://github.com/dfinity/internet-identity/issues/new">Report an Issue</a> • 📞 <a href="https://discord.gg/E9FxceAg2j">Discord</a>
+</p></>
 
 ---
 
