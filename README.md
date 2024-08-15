@@ -1,4 +1,4 @@
-<><p align="center"><a href="https://identity.ic0.app" target="_blank" rel="noopener noreferrer"><img width="600" src="./ii-logo.png" alt="Internet Identity" /></a></p><p align="center">
+<p align="center"><a href="https://identity.ic0.app" target="_blank" rel="noopener noreferrer"><img width="600" src="./ii-logo.png" alt="Internet Identity" /></a></p><p align="center">
 <a href="https://github.com/dfinity/internet-identity/actions/workflows/canister-tests.yml"><img src="https://github.com/dfinity/internet-identity/actions/workflows/canister-tests.yml/badge.svg" alt="Canister Tests" /></a>
 <a href="https://github.com/dfinity/internet-identity/actions/workflows/rust.yml"><img src="https://github.com/dfinity/internet-identity/actions/workflows/rust.yml/badge.svg" alt="Rust" /></a>
 <a href="https://github.com/dfinity/internet-identity/actions/workflows/frontend-checks.yml"><img src="https://github.com/dfinity/internet-identity/actions/workflows/frontend-checks.yml/badge.svg" alt="Frontend checks and lints" /></a>
